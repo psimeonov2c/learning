@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-3.1.1.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore.js"></script>
+	<script type="text/javascript">
+		// Your code goes here ... 
+		$(document).ready(function(){
+			// template
+			var printF = _.template($("#template").html());
+			var people;
+			var positionsToRender = [];
+			var peopleToRender = [];
+			
+			function render(selectedFilter){
+				peopleToRender = [];
+				for (var i = 0; i < people.length; i++) {
+					if (selectedFilter === "all" || people[i].position === selectedFilter) {
+						peopleToRender.push(people[i]);
+					};
+				};
+				
+				positionsToRender = _.uniq(people.map( function(people){
+					return people.position;
+				}));
+				
+				// template function
+				var resultHtml = printF({
+					uniquePositions: positionsToRender,
+					people: peopleToRender,
+					selectedFilter: selectedFilter
+				});
+				$('#container').html( resultHtml );
+			};
+			
+			$.ajax({
+				url: "data.json",
+				type: "GET",
+				dataType: "JSON",
+			})
+			.done(function(response){
+				console.log("done");
+				people = response;
+				
+				
+				$("#container").on("change", "select", function(){
+					render($(this).val());
+				});
+				
+				render("all");
+
+			})
+			.fail(function(){
+				console.log("fail");
+			})
+			.always(function(){
+				console.log("always");
+			});
+		});
+	</script>
+	<script type="text/html" id="template">
+			<select>
+				<option value="all" selected>All</option>
+					<% for (var i = uniquePositions.length - 1; i >= 0; i--) { %>
+				<option value="<%= uniquePositions[i] %>"
+					<%= selectedFilter === uniquePositions[i] ? "selected" : "" %>
+				>
+				<%= uniquePositions[i] %></option>
+				<%};%>
+			</select>
+		<table border="1" cellspacing="0" cellpadding="0">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Position</th>
+					<th>Room</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				<% for (var i = 0; i < people.length; i++) { %>
+					<tr>
+						<td><%= people[i].name %></td>
+						<td><%= people[i].position %></td>
+						<td><%= people[i].room %></td>
+					</tr>
+				<% } %>
+			</tbody>
+		</table>
+	</script>
+</head>
+<body>
+</body>
+	<div id="container"></div>
+</body>
+</html>
